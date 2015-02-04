@@ -21,15 +21,16 @@ public class UiMessage extends Container {
         msg.setUnselectedStyle(msgStyle());
         
         Font textFont = Font.createTrueTypeFont("Raleway Medium", "Raleway-Medium.ttf");
-        textFont = textFont.derive(18, Font.STYLE_PLAIN);
+        textFont = textFont.derive(16, Font.STYLE_PLAIN);
         
         final Label publisher = new Label(publisherName);
         final Style publisherStyle = new Style();
         Font publisherFont = Font.createTrueTypeFont("Alexandria", "AlexandriaFLF.ttf");
-        publisherFont = publisherFont.derive(14, Font.STYLE_PLAIN);
+        publisherFont = publisherFont.derive(16, Font.STYLE_PLAIN);
         publisherStyle.setFont(textFont);
         publisherStyle.setBgColor(0);
         publisherStyle.setBgTransparency(0);
+        publisherStyle.setFont(publisherFont);
         publisher.setUnselectedStyle(publisherStyle);
         publisher.setPreferredW(50);
         
@@ -39,7 +40,7 @@ public class UiMessage extends Container {
         final Style itemStyle = new Style();
         Font itemFont = Font.createTrueTypeFont("Alexandria", "AlexandriaFLF.ttf");
         itemFont = itemFont.derive(18, Font.STYLE_PLAIN);
-        itemStyle.setFont(textFont);
+        itemStyle.setFont(itemFont);
         itemStyle.setBgColor(0);
         itemStyle.setBgTransparency(0);
         item.setGrowByContent(true);
@@ -65,6 +66,12 @@ public class UiMessage extends Container {
 	
 	public Container in(Container container) {
 		container.addComponent(this);
+		int newHeight = 200;
+		for (int i = 0; i < container.getComponentCount(); i++) {
+			newHeight += container.getComponentAt(i).getPreferredH();
+		}
+		container.setPreferredH(Math.max(container.getPreferredH(), newHeight));
+		container.repaint();
 		return this;
 	}
 }

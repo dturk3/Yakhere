@@ -1,29 +1,26 @@
 package com.dt.yakhere.lib;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.Reader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.Hashtable;
 
 import com.codename1.io.ConnectionRequest;
-import com.codename1.io.JSONParser;
+import com.codename1.processing.Result;
 
 public class YakhereMessageRequest extends ConnectionRequest {
 	final double mLongitude;
 	final double mLatitude;
+	final String mMsg;
+	final String mPublisher;
 
 	boolean mIsReady;
-	final List<Map<String, String>> mResponse = new ArrayList<Map<String, String>>();
 	
-    public YakhereMessageRequest(double longitude, double latitude) {
+    public YakhereMessageRequest(double longitude, double latitude, String msg, String publisher) {
     	mLongitude = longitude;
     	mLatitude = latitude;
+    	mMsg = msg;
+    	mPublisher = publisher;
     	mIsReady = false;
     }
 	
@@ -33,20 +30,7 @@ public class YakhereMessageRequest extends ConnectionRequest {
 	}
 	
 	@Override
-	@SuppressWarnings("unchecked")
 	protected void readResponse(InputStream input) throws IOException {
-    	final Reader inputReader = new InputStreamReader(input);
-		final JSONParser parser = new JSONParser();
-		final Map<String, Object> responseBody = parser.parseJSON(inputReader);
-		for (String msg : (List<String>)responseBody.get("feed")) {
-			final Map<String, Object> rawMsg = parser.parseJSON(new InputStreamReader(new ByteArrayInputStream(msg.getBytes())));
-			final Map<String, String> feedMsg = new HashMap<String, String>();
-			feedMsg.put("fuzzyTimestamp", String.valueOf(rawMsg.get("fuzzyTimestamp")));
-			feedMsg.put("publisher", String.valueOf(rawMsg.get("publisher")));
-			feedMsg.put("message", String.valueOf(rawMsg.get("message")));
-			feedMsg.put("timestamp", String.valueOf(rawMsg.get("timestamp")));
-			mResponse.add(feedMsg);
-		}
 		mIsReady = true;
 	}
     
@@ -54,14 +38,15 @@ public class YakhereMessageRequest extends ConnectionRequest {
     	return mIsReady;
     }
     
-    public List<Map<String, String>> getResponse() {
-    	return mResponse;
-    }
-	 
 	@Override
 	protected void buildRequestBody(OutputStream os) throws IOException {
-		final String jsonRequest = "{\"lon\": \"" + mLongitude + "\", \"lat\": \"" + mLatitude + "\"}";
-		os.write(jsonRequest.getBytes());
+		final Hashtable<String, String> requestTable = new Hashtable<String, String>();
+		requestTable.put("lon", String.valueOf(mLongitude));
+		requestTable.put("lat", String.valueOf(mLatitude));
+		requestTable.put("message", String.valueOf(mMsg));
+		requestTable.put("publisher", String.valueOf(mPublisher));
+		final String jsonRequest = Result.fromContent(requestTable).toString();
+		os.write(jsonRequest.getBytes("UTF-8"));
 	}
 	
 	@Override

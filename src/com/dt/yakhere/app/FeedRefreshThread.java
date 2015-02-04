@@ -38,8 +38,10 @@ public class FeedRefreshThread extends Thread {
     }
 
 	private void refreshFeed(Location location) {
-		final YakhereFeedRequest yakhereRequest = new YakhereFeedRequest(location.getLongitude(), location.getLatitude());
+		// TODO - Longitude and latitude are mixed up here!
+		final YakhereFeedRequest yakhereRequest = new YakhereFeedRequest(location.getLatitude(), location.getLongitude());
 		yakhereRequest.setUrl("http://www.yakhere.com/feeds");
+		yakhereRequest.setHttpMethod("POST");
 		yakhereRequest.setPost(true);
 		yakhereRequest.setContentType("application/json");
 		yakhereRequest.setDuplicateSupported(true);
@@ -52,9 +54,10 @@ public class FeedRefreshThread extends Thread {
 		for (Map<String, String> feedItem: yakhereRequest.getResponse()) {
 			UiMessage.create(feedItem.get("publisher"), feedItem.get("message")).in(mChat);
 		}
+		mChat.repaint();
 	}
 
 	private static Location refreshLocation() throws IOException {
-		return LocationManager.getLocationManager().getCurrentLocation();
+		return LocationManager.getLocationManager().getCurrentLocationSync();
 	}
 }

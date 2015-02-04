@@ -8,11 +8,13 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
 import com.codename1.io.ConnectionRequest;
 import com.codename1.io.JSONParser;
+import com.codename1.processing.Result;
 
 public class YakhereFeedRequest extends ConnectionRequest {
 	final double mLongitude;
@@ -60,8 +62,11 @@ public class YakhereFeedRequest extends ConnectionRequest {
 	 
 	@Override
 	protected void buildRequestBody(OutputStream os) throws IOException {
-		final String jsonRequest = "{\"lon\": \"" + mLongitude + "\", \"lat\": \"" + mLatitude + "\"}";
-		os.write(jsonRequest.getBytes());
+		final Hashtable<String, String> requestTable = new Hashtable<String, String>();
+		requestTable.put("lon", String.valueOf(mLongitude));
+		requestTable.put("lat", String.valueOf(mLatitude));
+		final String jsonRequest = Result.fromContent(requestTable).toString();
+		os.write(jsonRequest.getBytes("UTF-8"));
 	}
 	
 	@Override
