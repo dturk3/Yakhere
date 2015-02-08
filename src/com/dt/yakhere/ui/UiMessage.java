@@ -11,11 +11,12 @@ import com.codename1.ui.table.TableLayout;
 import com.codename1.ui.table.TableLayout.Constraint;
 
 public class UiMessage extends Container {
-	public static UiMessage create(String publisherName, String msgText) {
+	public static UiMessage create(String publisherName, String msgText, String fuzzyTime) {
 		final UiMessage msg = new UiMessage();
-        final TableLayout msgLayout = new TableLayout(1, 2);
+        final TableLayout msgLayout = new TableLayout(2, 2);
         final Constraint rightConstraint = msgLayout.createConstraint(0, 1);
         rightConstraint.setWidthPercentage(100);
+        rightConstraint.setVerticalSpan(2);
         msgLayout.setGrowHorizontally(true);
         msg.setLayout(msgLayout);
         msg.setUnselectedStyle(msgStyle());
@@ -46,8 +47,16 @@ public class UiMessage extends Container {
         item.setGrowByContent(true);
         item.setUnselectedStyle(itemStyle);
         
+        final Label timestamp = new Label(fuzzyTime);
+        final Style timestampStyle = new Style();
+        Font timestampFont = Font.createTrueTypeFont("Alexandria", "AlexandriaFLF.ttf");
+        timestampFont = itemFont.derive(10, Font.STYLE_PLAIN);
+        timestampStyle.setFont(timestampFont);
+        timestamp.setUnselectedStyle(timestampStyle);
+
         msg.addComponent(publisher);
         msg.addComponent(item);
+        msg.addComponent(timestamp);
         
         return msg;
 	}
@@ -65,13 +74,12 @@ public class UiMessage extends Container {
 	}
 	
 	public Container in(Container container) {
-		container.addComponent(this);
+		container.addComponent(0, this);
 		int newHeight = 200;
 		for (int i = 0; i < container.getComponentCount(); i++) {
 			newHeight += container.getComponentAt(i).getPreferredH();
 		}
-		container.setPreferredH(Math.max(container.getPreferredH(), newHeight));
-		container.repaint();
+		container.setPreferredH(newHeight);
 		return this;
 	}
 }

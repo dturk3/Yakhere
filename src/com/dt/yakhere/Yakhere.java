@@ -18,7 +18,10 @@ import com.codename1.ui.Label;
 import com.codename1.ui.TextField;
 import com.codename1.ui.events.ActionEvent;
 import com.codename1.ui.events.ActionListener;
+import com.codename1.ui.events.FocusListener;
+import com.codename1.ui.layouts.BorderLayout;
 import com.codename1.ui.layouts.BoxLayout;
+import com.codename1.ui.layouts.LayeredLayout;
 import com.codename1.ui.list.ContainerList;
 import com.codename1.ui.plaf.Style;
 import com.codename1.ui.plaf.UIManager;
@@ -33,6 +36,7 @@ import com.dt.yakhere.ui.UiMap;
 import com.dt.yakhere.ui.UiMessage;
 
 public class Yakhere {
+	public static final String BASE_URL = "http://localhost";	
 
     private Form current;
     private ContainerList chat; 
@@ -40,6 +44,7 @@ public class Yakhere {
     private TextField input;
     private Label name;
     private Label hood;
+    private static Location location;
     
     public void init(Object context) {
         try{
@@ -48,6 +53,14 @@ public class Yakhere {
        }catch(IOException e){
             e.printStackTrace();
         }
+    }
+    
+    public static Location getLocation() {
+    	return location;
+    }
+    
+    public static void updateLocation(Location newLocation) {
+    	location = newLocation;
     }
     
 	public void start() throws IOException {
@@ -60,8 +73,6 @@ public class Yakhere {
         
         /////////////////////////////////////////////////////////
         
-        addMessage("BOb", "yo buddy!", chat);
-        
         mainForm.show();
     }
 
@@ -73,15 +84,16 @@ public class Yakhere {
         mainForm.getTitleComponent().getStyle().setFont(titleFont);
 		
 		final Container formPanel = new Container();
-		final TableLayout formPanelLayout = new TableLayout(4, 1);
-		final Constraint topRow = formPanelLayout.createConstraint(0, 0);
-		topRow.setHeightPercentage(10);
-		final Constraint midRow = formPanelLayout.createConstraint(1, 0);
-		midRow.setHeightPercentage(70);
-		final Constraint botRow = formPanelLayout.createConstraint(2, 0);
-		botRow.setHeightPercentage(10);
-		final Constraint sendRow = formPanelLayout.createConstraint(3, 0);
-		sendRow.setHeightPercentage(10);
+		final BorderLayout formPanelLayout = new BorderLayout();
+//		final TableLayout formPanelLayout = new TableLayout(4, 1);
+//		final Constraint topRow = formPanelLayout.createConstraint(0, 0);
+//		topRow.setHeightPercentage(10);
+//		final Constraint midRow = formPanelLayout.createConstraint(1, 0);
+//		midRow.setHeightPercentage(65);
+//		final Constraint botRow = formPanelLayout.createConstraint(2, 0);
+//		botRow.setHeightPercentage(10);
+//		final Constraint sendRow = formPanelLayout.createConstraint(3, 0);
+//		sendRow.setHeightPercentage(15);
 		formPanel.setLayout(formPanelLayout);
 		
 		mainForm.addComponent(formPanel);
@@ -94,7 +106,7 @@ public class Yakhere {
 		locationPanel.setLayout(locationPanelLayout);
 		locationPanel.setScrollable(false);
         
-        final Location location = LocationManager.getLocationManager().getCurrentLocationSync();
+        location = LocationManager.getLocationManager().getCurrentLocationSync();
         final Thread geocodeThread = new Thread() {
         	@Override
         	public void run() {
@@ -159,13 +171,15 @@ public class Yakhere {
         locationTextPanel.addComponent(hood);
         
         locationPanel.addComponent(locationTextPanel);
-        formPanel.addComponent(locationPanel);
+        formPanel.addComponent(BorderLayout.NORTH, locationPanel);
         
 		chat = new ContainerList();
 		final BoxLayout chatLayout = new BoxLayout(BoxLayout.Y_AXIS);
         chat.setLayout(chatLayout);
+        chat.setScrollableY(true);
+        chat.setFocusable(false);
         new FeedRefreshThread(chat).start(); 
-        formPanel.addComponent(chat);
+        formPanel.addComponent(BorderLayout.CENTER, chat);
 
         final BoxLayout layout = new BoxLayout(BoxLayout.Y_AXIS);
 		mainForm.setLayout(layout);
@@ -173,26 +187,25 @@ public class Yakhere {
 		
         /////////////////////////////////////////////////////////
         
+		final Container controlsPanel = new Container(new BoxLayout(BoxLayout.Y_AXIS));		
         input = new TextField();
-        formPanel.addComponent(input);
         input.setPreferredW(240);
+        input.setFocusable(false);
+        controlsPanel.addComponent(input);
         
         final Image logo = Image.createImage("/yakhere.png").scaled(32, 32);
         send = new Button();
         send.setIcon(logo);
-        formPanel.addComponent(send);
+        send.setFocusable(false);
+        controlsPanel.addComponent(send);
         
 		chat.setPreferredH(mainForm.getHeight()-(35 + 
 				send.getPreferredH() + 2*send.getStyle().getMargin(Component.TOP) + 
 				input.getPreferredH() + 2*input.getStyle().getMargin(Component.TOP) + 
 				locationTextPanel.getPreferredH() + 2*locationTextPanel.getStyle().getMargin(Component.TOP) + 
 				mainForm.getTitleComponent().getPreferredH() + 2*mainForm.getTitleComponent().getStyle().getMargin(Component.BOTTOM)));
-        
+		formPanel.addComponent(BorderLayout.SOUTH, controlsPanel);
 		return mainForm;
-	}
-
-	private void addMessage(String publisherName, String msgText, ContainerList chat) {
-		UiMessage.create(publisherName, msgText).in(chat);
 	}
 
     public void stop() {
@@ -213,16 +226,25 @@ public class Yakhere {
     	
 		@Override
 		public void actionPerformed(ActionEvent evt) {
+			if (mInput.getText().length() < 1) {
+				return;
+			}
+			if (mInput.getText().length() > 250) {
+				return;
+			}
 			Location location = LocationManager.getLocationManager().getCurrentLocationSync();
 			// TODO - longitude and latitude are mixed up
 			final YakhereMessageRequest msgRequest = new YakhereMessageRequest(location.getLatitude(), location.getLongitude(), input.getText(), name.getText());
-			msgRequest.setUrl("http://www.yakhere.com/messages");
+			msgRequest.setUrl(BASE_URL + "/messages");
 			msgRequest.setPost(true);
 			msgRequest.setContentType("application/json");
 			msgRequest.setDuplicateSupported(true);
 			NetworkManager.getInstance().addToQueue(msgRequest);
-			UiMessage.create(name.getText(), mInput.getText()).in(mOutput);
-			mOutput.repaint();
+//			UiMessage.create(name.getText(), mInput.getText()).in(mOutput);
+//			mOutput.repaint();
+			mInput.setHeight(mInput.getPreferredH());
+			((Component)evt.getSource()).setHeight(((Component)evt.getSource()).getPreferredH());
+			mInput.setText("");
 		}
 	}
 }
