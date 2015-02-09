@@ -23,7 +23,7 @@ public class YakhereMessageRequest extends ConnectionRequest {
     	mPublisher = publisher;
     	mIsReady = false;
     }
-	
+    
 	@Override
 	protected void postResponse() {
 

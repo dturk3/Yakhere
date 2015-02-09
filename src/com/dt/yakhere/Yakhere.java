@@ -3,6 +3,8 @@ package com.dt.yakhere;
 
 import java.io.IOException;
 
+import com.codename1.capture.Capture;
+import com.codename1.io.MultipartRequest;
 import com.codename1.io.NetworkManager;
 import com.codename1.io.Storage;
 import com.codename1.location.Location;
@@ -18,10 +20,8 @@ import com.codename1.ui.Label;
 import com.codename1.ui.TextField;
 import com.codename1.ui.events.ActionEvent;
 import com.codename1.ui.events.ActionListener;
-import com.codename1.ui.events.FocusListener;
 import com.codename1.ui.layouts.BorderLayout;
 import com.codename1.ui.layouts.BoxLayout;
-import com.codename1.ui.layouts.LayeredLayout;
 import com.codename1.ui.list.ContainerList;
 import com.codename1.ui.plaf.Style;
 import com.codename1.ui.plaf.UIManager;
@@ -31,9 +31,9 @@ import com.codename1.ui.util.Resources;
 import com.dt.yakhere.app.FeedRefreshThread;
 import com.dt.yakhere.lib.GoogleGeocodingRequest;
 import com.dt.yakhere.lib.Utils;
+import com.dt.yakhere.lib.YakhereImageRequest;
 import com.dt.yakhere.lib.YakhereMessageRequest;
 import com.dt.yakhere.ui.UiMap;
-import com.dt.yakhere.ui.UiMessage;
 
 public class Yakhere {
 	public static final String BASE_URL = "http://localhost";	
@@ -69,7 +69,7 @@ public class Yakhere {
             return;
         }
         final Form mainForm = initHomeScreen();
-        send.addActionListener(new SendActionListener(input, chat));
+        send.addActionListener(new SendActionListener(input));
         
         /////////////////////////////////////////////////////////
         
@@ -78,22 +78,13 @@ public class Yakhere {
 
     @SuppressWarnings("deprecation")
 	private Form initHomeScreen() throws IOException {
-		final Form mainForm = new Form("YAKHERE");
-        Font titleFont = Font.createTrueTypeFont("Raleway Medium", "Raleway-Medium.ttf");
-        titleFont = titleFont.derive(36, Font.STYLE_PLAIN);
+		final Form mainForm = new Form("YakHere");
+        Font titleFont = Font.createTrueTypeFont("Amerika", "AMERIKA_.ttf");
+        titleFont = titleFont.derive(64, Font.STYLE_PLAIN);
         mainForm.getTitleComponent().getStyle().setFont(titleFont);
 		
 		final Container formPanel = new Container();
 		final BorderLayout formPanelLayout = new BorderLayout();
-//		final TableLayout formPanelLayout = new TableLayout(4, 1);
-//		final Constraint topRow = formPanelLayout.createConstraint(0, 0);
-//		topRow.setHeightPercentage(10);
-//		final Constraint midRow = formPanelLayout.createConstraint(1, 0);
-//		midRow.setHeightPercentage(65);
-//		final Constraint botRow = formPanelLayout.createConstraint(2, 0);
-//		botRow.setHeightPercentage(10);
-//		final Constraint sendRow = formPanelLayout.createConstraint(3, 0);
-//		sendRow.setHeightPercentage(15);
 		formPanel.setLayout(formPanelLayout);
 		
 		mainForm.addComponent(formPanel);
@@ -189,9 +180,18 @@ public class Yakhere {
         
 		final Container controlsPanel = new Container(new BoxLayout(BoxLayout.Y_AXIS));		
         input = new TextField();
-        input.setPreferredW(240);
         input.setFocusable(false);
-        controlsPanel.addComponent(input);
+        input.setPreferredW((int)(0.8 * mainForm.getWidth()));
+        
+        final Button cameraButton = new Button();
+        cameraButton.addActionListener(new CameraActionListener());
+        cameraButton.setPreferredW((int)(0.2 * mainForm.getWidth()));
+        final Image camera = Image.createImage("/camera-light.png");
+        cameraButton.setIcon(camera);
+        final Container inputContainer = new Container(new BoxLayout(BoxLayout.X_AXIS));
+        inputContainer.addComponent(input);
+        inputContainer.addComponent(cameraButton);
+        controlsPanel.addComponent(inputContainer);
         
         final Image logo = Image.createImage("/yakhere.png").scaled(32, 32);
         send = new Button();
@@ -215,13 +215,36 @@ public class Yakhere {
     public void destroy() {
     }
     
+    private class CameraActionListener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent evt) {
+			final String capturedPhoto = Capture.capturePhoto(306, 306);
+			
+			try {
+				final MultipartRequest imageUploadRequest = new YakhereImageRequest(location.getLatitude(), location.getLongitude(), capturedPhoto, name.getText());
+	            imageUploadRequest.setUrl(BASE_URL + "/upload");
+	            imageUploadRequest.setPost(true);
+	            imageUploadRequest.setDuplicateSupported(true);
+	            try {
+	                imageUploadRequest.addData("content", capturedPhoto, "image/png");
+	                imageUploadRequest.setFilename("content", capturedPhoto);
+	                NetworkManager.getInstance().addToQueue(imageUploadRequest);
+	            } 
+	            catch (IOException ioe) {
+	                return;
+	            }
+			}
+			catch (Exception e) {
+				return;
+			}
+		}
+	}
+    
     private class SendActionListener implements ActionListener {
     	final TextField mInput;
-    	final ContainerList mOutput;
     	
-    	public SendActionListener(TextField inputFrom, ContainerList outputTo) {
+    	public SendActionListener(TextField inputFrom) {
     		mInput = inputFrom;
-    		mOutput = outputTo;
 		}
     	
 		@Override
@@ -240,8 +263,6 @@ public class Yakhere {
 			msgRequest.setContentType("application/json");
 			msgRequest.setDuplicateSupported(true);
 			NetworkManager.getInstance().addToQueue(msgRequest);
-//			UiMessage.create(name.getText(), mInput.getText()).in(mOutput);
-//			mOutput.repaint();
 			mInput.setHeight(mInput.getPreferredH());
 			((Component)evt.getSource()).setHeight(((Component)evt.getSource()).getPreferredH());
 			mInput.setText("");
