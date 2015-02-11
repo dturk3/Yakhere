@@ -12,6 +12,7 @@ import com.codename1.location.LocationManager;
 import com.codename1.ui.Button;
 import com.codename1.ui.Component;
 import com.codename1.ui.Container;
+import com.codename1.ui.Dialog;
 import com.codename1.ui.Display;
 import com.codename1.ui.Font;
 import com.codename1.ui.Form;
@@ -28,6 +29,7 @@ import com.codename1.ui.plaf.UIManager;
 import com.codename1.ui.table.TableLayout;
 import com.codename1.ui.table.TableLayout.Constraint;
 import com.codename1.ui.util.Resources;
+import com.dt.yakhere.app.Authenticator;
 import com.dt.yakhere.app.FeedRefreshThread;
 import com.dt.yakhere.lib.GoogleGeocodingRequest;
 import com.dt.yakhere.lib.Utils;
@@ -63,7 +65,7 @@ public class Yakhere {
     	location = newLocation;
     }
     
-	public void start() throws IOException {
+	public void start() throws IOException, InterruptedException {
         if(current != null){
             current.show();
             return;
@@ -77,7 +79,7 @@ public class Yakhere {
     }
 
     @SuppressWarnings("deprecation")
-	private Form initHomeScreen() throws IOException {
+	private Form initHomeScreen() throws IOException, InterruptedException {
 		final Form mainForm = new Form("YakHere");
         Font titleFont = Font.createTrueTypeFont("Amerika", "AMERIKA_.ttf");
         titleFont = titleFont.derive(64, Font.STYLE_PLAIN);
@@ -106,10 +108,7 @@ public class Yakhere {
                 		"AIzaSyAMBPwwIuZdYp1CcCL0OGKit0cFc70raXw");
                 geocodingRequest.setContentType("application/json");
                 geocodingRequest.setDuplicateSupported(true);
-        		NetworkManager.getInstance().addToQueue(geocodingRequest);
-        		while (!geocodingRequest.isReady()) {
-        			// Wait...
-        		}
+        		NetworkManager.getInstance().addToQueueAndWait(geocodingRequest);
         		hood.setText(geocodingRequest.getResponse());
         		hood.repaint();
         	}
@@ -132,12 +131,19 @@ public class Yakhere {
         locationTextPanel.setPreferredH(64);
         
         String yakhereName = String.valueOf(Storage.getInstance().readObject("yakhere-name"));
-        if (yakhereName == null || "null".equals(yakhereName)) {
-        	yakhereName = Utils.generateName();
+        name = new Label("");
+        if (yakhereName == null || yakhereName.length() == 0 || "null".equals(yakhereName)) {
+        	final boolean signInOption = Dialog.show("Welcome - Sign In", 
+        			"To use YakHere, you may sign in with your "
+        			+ "Google account or allow YakHere to generate a username for you.", 
+        			"Google", 
+        			"YakHere");
+        	
+        	yakhereName = signInOption ? new Authenticator(mainForm).authGoogle() : Utils.generateName();
+    		name.setText(yakhereName);
         	Storage.getInstance().writeObject("yakhere-name", yakhereName);
         }
-        
-        name = new Label(yakhereName);
+        name.setText(yakhereName);
         
         final Style nameStyle = new Style();
         Font nameFont = Font.createTrueTypeFont("Raleway Medium", "Raleway-Medium.ttf");
