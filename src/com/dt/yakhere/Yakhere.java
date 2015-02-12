@@ -12,13 +12,14 @@ import com.codename1.location.LocationManager;
 import com.codename1.ui.Button;
 import com.codename1.ui.Component;
 import com.codename1.ui.Container;
-import com.codename1.ui.Dialog;
 import com.codename1.ui.Display;
 import com.codename1.ui.Font;
 import com.codename1.ui.Form;
 import com.codename1.ui.Image;
 import com.codename1.ui.Label;
+import com.codename1.ui.TextArea;
 import com.codename1.ui.TextField;
+import com.codename1.ui.animations.CommonTransitions;
 import com.codename1.ui.events.ActionEvent;
 import com.codename1.ui.events.ActionListener;
 import com.codename1.ui.layouts.BorderLayout;
@@ -37,6 +38,10 @@ import com.dt.yakhere.lib.YakhereImageRequest;
 import com.dt.yakhere.lib.YakhereMessageRequest;
 import com.dt.yakhere.ui.UiMap;
 
+/*
+ * Use your phone to talk to someone right next to you, while hiding behind names that
+ * nobody can decipher. Sounds like fun. It's like texting except no one knows who's who.
+ */
 public class Yakhere {
 	public static final String BASE_URL = "http://localhost";	
 
@@ -132,16 +137,72 @@ public class Yakhere {
         
         String yakhereName = String.valueOf(Storage.getInstance().readObject("yakhere-name"));
         name = new Label("");
-        if (yakhereName == null || yakhereName.length() == 0 || "null".equals(yakhereName)) {
-        	final boolean signInOption = Dialog.show("Welcome - Sign In", 
-        			"To use YakHere, you may sign in with your "
-        			+ "Google account or allow YakHere to generate a username for you.", 
-        			"Google", 
-        			"YakHere");
+        if (yakhereName == null || yakhereName.length() < 4 || "null".equals(yakhereName)) {
+        	final Container signInPanel = new Container(new BoxLayout(BoxLayout.Y_AXIS));
+        	final Style signInInstructionsStyle = new Style();
+            Font signInInstructionsStyleFont = Font.createTrueTypeFont("FrenteH1-Regular", "FrenteH1-Regular.ttf");
+            signInInstructionsStyleFont = signInInstructionsStyleFont.derive(42, Font.STYLE_PLAIN);
+        	signInInstructionsStyle.setFont(signInInstructionsStyleFont);
+        	signInInstructionsStyle.setFgColor(-1);
+        	signInInstructionsStyle.setBgColor(0);
+        	signInInstructionsStyle.setBgTransparency(235);
+        	signInInstructionsStyle.setAlignment(Component.CENTER);
         	
-        	yakhereName = signInOption ? new Authenticator(mainForm).authGoogle() : Utils.generateName();
-    		name.setText(yakhereName);
-        	Storage.getInstance().writeObject("yakhere-name", yakhereName);
+        	final TextArea signInInstructions = new TextArea("\nWelcome to YakHere! \n-\n"
+        			+ "Normally people identify themselves by signing in through Google. \n-\n"
+        			+ "At your own risk, you may choose to remain anonymous using a random name. \n-\n"
+        			+ "This is permanent.\n");
+        	signInInstructions.setUnselectedStyle(signInInstructionsStyle);
+        	signInInstructions.setSelectedStyle(signInInstructionsStyle);
+        	signInInstructions.setEditable(false);
+        	
+        	boolean signedIn = false;
+        	
+        	final Button signInGoogle = new Button(Image.createImage("/google.png").scaled(64, 64));
+        	signInGoogle.setHeight(128);
+        	signInGoogle.setPreferredW(mainForm.getPreferredW()/2);
+        	final Button signInYakhere = new Button(Image.createImage("/yakhere.png"));
+        	signInYakhere.setHeight(128);
+        	signInYakhere.setPreferredW(mainForm.getPreferredW()/2);
+
+        	final Container signInButtonPanel = new Container(new BoxLayout(BoxLayout.X_AXIS));
+        	
+        	signInPanel.addComponent(signInInstructions);
+        	signInButtonPanel.addComponent(signInGoogle);
+        	signInButtonPanel.addComponent(signInYakhere);
+        	signInPanel.addComponent(signInButtonPanel);
+        	signInButtonPanel.setPreferredH(mainForm.getPreferredH() - mainForm.getTitleComponent().getPreferredH());
+
+        	signInGoogle.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent evt) {
+					mainForm.removeComponent(signInPanel);
+					signInPanel.setVisible(false);
+					signInPanel.removeAll();
+					String yakhereName;
+					try {
+						yakhereName = new Authenticator(mainForm).authGoogle();
+					} catch (InterruptedException e) {
+						return;
+					}
+		    		name.setText(yakhereName);
+		        	Storage.getInstance().writeObject("yakhere-name", yakhereName);
+				}
+			});
+        	
+        	signInYakhere.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent evt) {
+					mainForm.removeComponent(signInPanel);
+					signInPanel.setVisible(false);
+					signInPanel.removeAll();
+					final String yakhereName = Utils.generateName();
+		    		name.setText(yakhereName);
+		        	Storage.getInstance().writeObject("yakhere-name", yakhereName);
+				}
+			});
+        	
+        	mainForm.addComponent(0, signInPanel);
         }
         name.setText(yakhereName);
         

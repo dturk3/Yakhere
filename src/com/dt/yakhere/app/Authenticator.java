@@ -41,6 +41,7 @@ public class Authenticator {
     	    	}
     	    }
     	);
+    	authComponent.setPreferredH(mMainForm.getPreferredH() - mMainForm.getTitleComponent().getPreferredH());
     	final Container subCenterContainer = new Container();
 		subCenterContainer.setLayout(new BorderLayout());
 		subCenterContainer.addComponent(BorderLayout.CENTER, authComponent);
