@@ -50,6 +50,11 @@ public class Authenticator {
     	mMainForm.show();
     	
     	while (authComponent == null || authComponent.getTitle() == null || !authComponent.getTitle().startsWith("Success")) {
+    		if (authComponent != null && authComponent.getTitle() != null && authComponent.getTitle().startsWith("Denied")) {
+    			mMainForm.removeComponent(subCenterContainer);
+    			authComponent.destroy();
+    			throw new InterruptedException();
+    		}
     		Thread.sleep(5000);
     	}
     	final String code = authComponent.getTitle().substring(authComponent.getTitle().lastIndexOf("=") + 1);

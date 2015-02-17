@@ -12,6 +12,7 @@ import com.codename1.location.LocationManager;
 import com.codename1.ui.Button;
 import com.codename1.ui.Component;
 import com.codename1.ui.Container;
+import com.codename1.ui.Dialog;
 import com.codename1.ui.Display;
 import com.codename1.ui.Font;
 import com.codename1.ui.Form;
@@ -19,7 +20,6 @@ import com.codename1.ui.Image;
 import com.codename1.ui.Label;
 import com.codename1.ui.TextArea;
 import com.codename1.ui.TextField;
-import com.codename1.ui.animations.CommonTransitions;
 import com.codename1.ui.events.ActionEvent;
 import com.codename1.ui.events.ActionListener;
 import com.codename1.ui.layouts.BorderLayout;
@@ -43,7 +43,7 @@ import com.dt.yakhere.ui.UiMap;
  * nobody can decipher. Sounds like fun. It's like texting except no one knows who's who.
  */
 public class Yakhere {
-	public static final String BASE_URL = "http://localhost";	
+	public static final String BASE_URL = "http://192.168.0.192";	
 
     private Form current;
     private ContainerList chat; 
@@ -70,16 +70,20 @@ public class Yakhere {
     	location = newLocation;
     }
     
-	public void start() throws IOException, InterruptedException {
+	public void start() {
         if(current != null){
             current.show();
             return;
         }
-        final Form mainForm = initHomeScreen();
+    	Form mainForm;
+		try {
+			mainForm = initHomeScreen();
+		} 
+		catch (Exception e) {
+			Dialog.show("Error", "An error has occurred.", "OK", null);
+			return;
+		}
         send.addActionListener(new SendActionListener(input));
-        
-        /////////////////////////////////////////////////////////
-        
         mainForm.show();
     }
 
@@ -158,10 +162,10 @@ public class Yakhere {
         	
         	boolean signedIn = false;
         	
-        	final Button signInGoogle = new Button(Image.createImage("/google.png").scaled(64, 64));
+        	final Button signInGoogle = new Button(Utils.loadImage("/google.png").scaled(64, 64));
         	signInGoogle.setHeight(128);
         	signInGoogle.setPreferredW(mainForm.getPreferredW()/2);
-        	final Button signInYakhere = new Button(Image.createImage("/yakhere.png"));
+        	final Button signInYakhere = new Button(Utils.loadImage("/yakhere.png"));
         	signInYakhere.setHeight(128);
         	signInYakhere.setPreferredW(mainForm.getPreferredW()/2);
 
@@ -178,11 +182,13 @@ public class Yakhere {
 				public void actionPerformed(ActionEvent evt) {
 					mainForm.removeComponent(signInPanel);
 					signInPanel.setVisible(false);
-					signInPanel.removeAll();
 					String yakhereName;
 					try {
 						yakhereName = new Authenticator(mainForm).authGoogle();
+						signInPanel.removeAll();
 					} catch (InterruptedException e) {
+						signInPanel.setVisible(true);
+						mainForm.addComponent(0, signInPanel);
 						return;
 					}
 		    		name.setText(yakhereName);
@@ -208,7 +214,7 @@ public class Yakhere {
         
         final Style nameStyle = new Style();
         Font nameFont = Font.createTrueTypeFont("Raleway Medium", "Raleway-Medium.ttf");
-        nameFont = nameFont.derive(16, Font.STYLE_PLAIN);
+        nameFont = nameFont.derive(26, Font.STYLE_PLAIN);
         nameStyle.setFont(nameFont);
         nameStyle.setFgColor(-1);
         nameStyle.setBgColor(0);
@@ -220,7 +226,7 @@ public class Yakhere {
         hood = new Label("- - -");
         final Style hoodStyle = new Style();
         Font hoodFont = Font.createTrueTypeFont("Raleway Medium", "Raleway-Medium.ttf");
-        hoodFont = hoodFont.derive(14, Font.STYLE_PLAIN);
+        hoodFont = hoodFont.derive(24, Font.STYLE_PLAIN);
         hoodStyle.setFont(nameFont);
         hoodStyle.setFgColor(-1);
         hoodStyle.setBgColor(0);
@@ -236,6 +242,9 @@ public class Yakhere {
         chat.setLayout(chatLayout);
         chat.setScrollableY(true);
         chat.setFocusable(false);
+        final Style chatStyle = new Style();
+        chatStyle.setBgColor(-1);
+        chat.setUnselectedStyle(chatStyle);
         new FeedRefreshThread(chat).start(); 
         formPanel.addComponent(BorderLayout.CENTER, chat);
 
@@ -253,14 +262,14 @@ public class Yakhere {
         final Button cameraButton = new Button();
         cameraButton.addActionListener(new CameraActionListener());
         cameraButton.setPreferredW((int)(0.2 * mainForm.getWidth()));
-        final Image camera = Image.createImage("/camera-light.png");
+        final Image camera = Utils.loadImage("/camera-light.png");
         cameraButton.setIcon(camera);
         final Container inputContainer = new Container(new BoxLayout(BoxLayout.X_AXIS));
         inputContainer.addComponent(input);
         inputContainer.addComponent(cameraButton);
         controlsPanel.addComponent(inputContainer);
         
-        final Image logo = Image.createImage("/yakhere.png").scaled(32, 32);
+        final Image logo = Utils.loadImage("/yakhere.png").scaled(32, 32);
         send = new Button();
         send.setIcon(logo);
         send.setFocusable(false);

@@ -36,7 +36,7 @@ public class UiMap extends MapComponent{
         
         envMap.setDraggable(false);
         envMap.setZoomLevel(15);
-        envMap.setPreferredSize(new Dimension(64, 64));
+        envMap.setPreferredSize(new Dimension(96, 96));
         envMap.removeAll();
         envMap.repaint();
         

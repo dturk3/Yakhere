@@ -49,7 +49,7 @@
 	<property file="codenameone_settings.properties" />
 	<property file="build.props" />
 	<property environment="env"/>
-	<property name="javaHome" value="${env.JAVA_HOME}"/>
+	<property name="javaHome" value="C:\Program Files\Java\jdk1.7.0_25"/>
 	<taskdef name="codeNameOne" classname="com.codename1.build.client.CodeNameOneBuildTask" classpath="CodeNameOneBuildClient.jar" />
     <taskdef name="prepareTests" classname="com.codename1.build.client.PrepareTestsTask" classpath="CodeNameOneBuildClient.jar"/>
     <taskdef name="installLibs" classname="com.codename1.build.client.InstallLibsTask" classpath="CodeNameOneBuildClient.jar"/>
@@ -163,7 +163,7 @@
 	</target>
 
 	<target name="goBlankNoPath" depends="testNoPath" if="javacExists">
-		<property name="javacPath" value="javac"/>
+		<property name="javacPath" value="${javaHome}\bin\javac.exe"/>
 		<property name="pathDefined" value="true"/>
 	</target>
 
@@ -184,11 +184,11 @@
 	</target> 
 	
 	<target name="goBlank" depends="javacBlank" if="javacExists">
-	      <property name="javacPath" value="${javaHome}/bin/javac"/> 
+	      <property name="javacPath" value="${javaHome}\bin\javac.exe"/> 
 	      <property name="pathDefined" value="true"/> 
 	</target> 
 	<target name="javacBlank" >
-	     <available file="${javaHome}/bin/javac" property="javacExists"/> 
+	     <available file="${javaHome}\bin\javac.exe" property="javacExists"/> 
 	</target> 
 	
 	<target name="testFail" unless="pathDefined">

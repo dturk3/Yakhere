@@ -1,8 +1,13 @@
 package com.dt.yakhere.lib;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+
+import com.codename1.ui.Display;
+import com.codename1.ui.Image;
 
 public class Utils {
 	final static List<String> WORD_PATTERNS = Arrays.asList(
@@ -40,5 +45,18 @@ public class Utils {
 		default:
 			return letter + "";
 		}
+	}
+	
+	public static Image loadImage(String path) throws IOException {
+	    InputStream in = null;
+	    try {
+	        in = Display.getInstance().getResourceAsStream(null, path);
+	        return Image.createImage(in);
+	    } 
+	    finally {
+	        if (in != null) {
+	            in.close();
+	        }
+	    }
 	}
 }

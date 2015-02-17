@@ -36,16 +36,17 @@ public class UiMessage extends Container {
         final Label publisher = new Label(publisherName);
         final Style publisherStyle = new Style();
         Font publisherFont = Font.createTrueTypeFont("Raleway Medium", "Raleway-Medium.ttf");
-        publisherFont = publisherFont.derive(16, Font.STYLE_PLAIN);
+        publisherFont = publisherFont.derive(24, Font.STYLE_PLAIN);
         publisherStyle.setBgColor(0);
         publisherStyle.setBgTransparency(0);
+        
         publisherStyle.setFont(publisherFont);
         publisher.setUnselectedStyle(publisherStyle);
         
         final Label timestamp = new Label(fuzzyTime);
         final Style timestampStyle = new Style();
         Font timestampFont = Font.createTrueTypeFont("Raleway Medium", "Raleway-Medium.ttf");
-        timestampFont = timestampFont.derive(10, Font.STYLE_PLAIN);
+        timestampFont = timestampFont.derive(20, Font.STYLE_PLAIN);
         timestampStyle.setFont(timestampFont);
         timestamp.setUnselectedStyle(timestampStyle);
 
@@ -55,7 +56,7 @@ public class UiMessage extends Container {
         
         final Label spacer = new Label();
         Font spacerFont = Font.createTrueTypeFont("Raleway Medium", "Raleway-Medium.ttf");
-        spacerFont = spacerFont.derive(16, Font.STYLE_PLAIN);
+        spacerFont = spacerFont.derive(26, Font.STYLE_PLAIN);
         final Style spacerStyle = new Style();
         spacerStyle.setFont(spacerFont);
         spacerStyle.setFgColor(-1);
@@ -72,11 +73,12 @@ public class UiMessage extends Container {
         item.setEditable(false);
         item.setFocusable(false);
         final Style itemStyle = new Style();
-        Font itemFont = Font.createTrueTypeFont("Folks", "Folks-Normal.ttf");
-        itemFont = itemFont.derive(18, Font.STYLE_PLAIN);
+        Font itemFont = Font.createTrueTypeFont("Raleway Medium", "Raleway-Medium.ttf");
+        itemFont = itemFont.derive(28, Font.STYLE_PLAIN);
         itemStyle.setFont(itemFont);
         itemStyle.setBgColor(0);
         itemStyle.setBgTransparency(0);
+        itemStyle.setMargin(TOP, 3);
         item.setGrowByContent(true);
         item.setUnselectedStyle(itemStyle);
 		return item;
@@ -88,14 +90,12 @@ public class UiMessage extends Container {
         final Style itemStyle = new Style();
         itemStyle.setBgColor(0);
         itemStyle.setBgTransparency(0);
-        itemStyle.setBorder(Border.createGrooveBorder(1));
         item.setUnselectedStyle(itemStyle);
 		return item;
 	}
 
 	private static Style msgStyle() {
 		final Style msgStyle = new Style();
-        msgStyle.setBorder(Border.createEtchedRaised());
         msgStyle.setPadding(Component.TOP, 5);
         msgStyle.setPadding(Component.RIGHT, 5);
         msgStyle.setPadding(Component.BOTTOM, 5);
