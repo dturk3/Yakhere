@@ -254,14 +254,19 @@ public class Yakhere {
 		
         /////////////////////////////////////////////////////////
         
-		final Container controlsPanel = new Container(new BoxLayout(BoxLayout.Y_AXIS));		
+		final Container controlsPanel = new Container(new BoxLayout(BoxLayout.Y_AXIS));
+		final Style inputStyle = new Style();
+        Font inputFont = Font.createTrueTypeFont("Raleway Medium", "Raleway-Medium.ttf");
+        inputFont = inputFont.derive(48, Font.STYLE_PLAIN);
         input = new TextField();
+        input.getStyle().setFont(inputFont);
         input.setFocusable(false);
-        input.setPreferredW((int)(0.8 * mainForm.getWidth()));
+        input.setPreferredW((int)(mainForm.getWidth()) - 148);
         
         final Button cameraButton = new Button();
         cameraButton.addActionListener(new CameraActionListener());
-        cameraButton.setPreferredW((int)(0.2 * mainForm.getWidth()));
+        cameraButton.setPreferredW(128);
+        cameraButton.setPreferredH(128);
         final Image camera = Utils.loadImage("/camera-light.png");
         cameraButton.setIcon(camera);
         final Container inputContainer = new Container(new BoxLayout(BoxLayout.X_AXIS));
@@ -269,10 +274,11 @@ public class Yakhere {
         inputContainer.addComponent(cameraButton);
         controlsPanel.addComponent(inputContainer);
         
-        final Image logo = Utils.loadImage("/yakhere.png").scaled(32, 32);
+        final Image logo = Utils.loadImage("/yakhere.png");
         send = new Button();
         send.setIcon(logo);
         send.setFocusable(false);
+        send.setPreferredH(96);
         controlsPanel.addComponent(send);
         
 		chat.setPreferredH(mainForm.getHeight()-(35 + 
@@ -294,7 +300,7 @@ public class Yakhere {
     private class CameraActionListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent evt) {
-			final String capturedPhoto = Capture.capturePhoto(306, 306);
+			final String capturedPhoto = Capture.capturePhoto(512, 512);
 			
 			try {
 				final MultipartRequest imageUploadRequest = new YakhereImageRequest(location.getLatitude(), location.getLongitude(), capturedPhoto, name.getText());
