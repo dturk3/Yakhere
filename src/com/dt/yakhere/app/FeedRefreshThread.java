@@ -16,10 +16,8 @@ import com.codename1.ui.Image;
 import com.codename1.ui.Label;
 import com.codename1.ui.TextArea;
 import com.codename1.ui.geom.Dimension;
-import com.codename1.ui.layouts.BorderLayout;
 import com.codename1.ui.layouts.BoxLayout;
 import com.codename1.ui.plaf.Style;
-import com.codename1.ui.table.TableLayout;
 import com.dt.yakhere.Yakhere;
 import com.dt.yakhere.lib.Utils;
 import com.dt.yakhere.lib.YakhereFeedRequest;
@@ -119,10 +117,11 @@ public class FeedRefreshThread extends Thread {
         mChat.removeComponent(spinner);
 
 		int newItems = yakhereRequest.getResponse().size() - mChat.getComponentCount();
+		newItems = Math.max(newItems, 0);
 		List<Map<String, String>> feedList = yakhereRequest.getResponse();
-		feedList = feedList.subList(feedList.size() - newItems, feedList.size());
-		for (Map<String, String> feedItem: feedList) {
-			// Refresh timestamps only for existing (non-new) messages!			
+		final List<Map<String, String>> newFeedList = feedList.subList(feedList.size() - newItems, feedList.size());
+		
+		for (Map<String, String> feedItem: newFeedList) {
 			
 			final String msg = feedItem.get("message");
 			if (msg.startsWith("img:")) {
@@ -138,6 +137,15 @@ public class FeedRefreshThread extends Thread {
 				continue;
 			}
 			UiMessage.create(feedItem.get("publisher"), msg, feedItem.get("fuzzyTimestamp")).in(mChat);
+		}
+		
+		for (int i = 0; i < feedList.size(); i++) {
+			final Component comp = mChat.getComponentAt(i);
+			if (comp instanceof Container) {
+				final Container containerComp = (Container)comp;
+				final Label timestamp = (Label) ((Container)containerComp.getComponentAt(0)).getComponentAt(1);
+				timestamp.setText(feedList.get(feedList.size() - 1 - i).get("fuzzyTimestamp"));
+			}
 		}
 		
 		if (mChat.getComponentCount() < 1) {

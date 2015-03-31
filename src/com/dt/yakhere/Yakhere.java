@@ -43,7 +43,9 @@ import com.dt.yakhere.ui.UiMap;
  * nobody can decipher. Sounds like fun. It's like texting except no one knows who's who.
  */
 public class Yakhere {
-	public static final String BASE_URL = "http://192.168.0.192";	
+	public static final String BASE_URL = "http://www.yakhere.com";	
+	//public static final String BASE_URL = "http://localhost";
+	//public static final String BASE_URL = "http://104.236.27.169";
 
     private Form current;
     private ContainerList chat; 
@@ -160,8 +162,6 @@ public class Yakhere {
         	signInInstructions.setSelectedStyle(signInInstructionsStyle);
         	signInInstructions.setEditable(false);
         	
-        	boolean signedIn = false;
-        	
         	final Button signInGoogle = new Button(Utils.loadImage("/google.png").scaled(64, 64));
         	signInGoogle.setHeight(128);
         	signInGoogle.setPreferredW(mainForm.getPreferredW()/2);
@@ -255,7 +255,6 @@ public class Yakhere {
         /////////////////////////////////////////////////////////
         
 		final Container controlsPanel = new Container(new BoxLayout(BoxLayout.Y_AXIS));
-		final Style inputStyle = new Style();
         Font inputFont = Font.createTrueTypeFont("Raleway Medium", "Raleway-Medium.ttf");
         inputFont = inputFont.derive(48, Font.STYLE_PLAIN);
         input = new TextField();
@@ -345,8 +344,8 @@ public class Yakhere {
 			msgRequest.setContentType("application/json");
 			msgRequest.setDuplicateSupported(true);
 			NetworkManager.getInstance().addToQueue(msgRequest);
-			mInput.setHeight(mInput.getPreferredH());
-			((Component)evt.getSource()).setHeight(((Component)evt.getSource()).getPreferredH());
+//			mInput.setHeight(mInput.getPreferredH());
+//			((Component)evt.getSource()).setHeight(((Component)evt.getSource()).getPreferredH());
 			mInput.setText("");
 		}
 	}
