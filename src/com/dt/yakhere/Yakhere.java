@@ -24,6 +24,7 @@ import com.codename1.ui.events.ActionEvent;
 import com.codename1.ui.events.ActionListener;
 import com.codename1.ui.layouts.BorderLayout;
 import com.codename1.ui.layouts.BoxLayout;
+import com.codename1.ui.layouts.GridLayout;
 import com.codename1.ui.list.ContainerList;
 import com.codename1.ui.plaf.Style;
 import com.codename1.ui.plaf.UIManager;
@@ -38,10 +39,7 @@ import com.dt.yakhere.lib.YakhereImageRequest;
 import com.dt.yakhere.lib.YakhereMessageRequest;
 import com.dt.yakhere.ui.UiMap;
 
-/*
- * Use your phone to talk to someone right next to you, while hiding behind names that
- * nobody can decipher. Sounds like fun. It's like texting except no one knows who's who.
- */
+
 public class Yakhere {
 	public static final String BASE_URL = "http://www.yakhere.com";	
 	//public static final String BASE_URL = "http://localhost";
@@ -92,6 +90,9 @@ public class Yakhere {
     @SuppressWarnings("deprecation")
 	private Form initHomeScreen() throws IOException, InterruptedException {
 		final Form mainForm = new Form("YakHere");
+		mainForm.getStyle().setBgColor(0);
+		mainForm.getStyle().setBackgroundType(Style.BACKGROUND_NONE, true);
+		
         Font titleFont = Font.createTrueTypeFont("Amerika", "AMERIKA_.ttf");
         titleFont = titleFont.derive(64, Font.STYLE_PLAIN);
         mainForm.getTitleComponent().getStyle().setFont(titleFont);
@@ -144,69 +145,98 @@ public class Yakhere {
         String yakhereName = String.valueOf(Storage.getInstance().readObject("yakhere-name"));
         name = new Label("");
         if (yakhereName == null || yakhereName.length() < 4 || "null".equals(yakhereName)) {
-        	final Container signInPanel = new Container(new BoxLayout(BoxLayout.Y_AXIS));
+        	final Container signInPanel = new Container(new GridLayout(4, 1));
         	final Style signInInstructionsStyle = new Style();
-            Font signInInstructionsStyleFont = Font.createTrueTypeFont("FrenteH1-Regular", "FrenteH1-Regular.ttf");
-            signInInstructionsStyleFont = signInInstructionsStyleFont.derive(42, Font.STYLE_PLAIN);
+            Font signInInstructionsStyleFont = Font.createTrueTypeFont("Raleway Medium", "Raleway-Medium.ttf");
+            signInInstructionsStyleFont = signInInstructionsStyleFont.derive(36, Font.STYLE_PLAIN);
         	signInInstructionsStyle.setFont(signInInstructionsStyleFont);
         	signInInstructionsStyle.setFgColor(-1);
         	signInInstructionsStyle.setBgColor(0);
         	signInInstructionsStyle.setBgTransparency(235);
         	signInInstructionsStyle.setAlignment(Component.CENTER);
+        	signInInstructionsStyle.setPadding(Component.BOTTOM, 50);
+
+        	final TextArea signInInstructions = new TextArea("\nWelcome to YakHere! \n\n"
+        			+ "Please take a minute to sign in or sign up. Obviously, it's FREE.\n");
         	
-        	final TextArea signInInstructions = new TextArea("\nWelcome to YakHere! \n-\n"
-        			+ "Normally people identify themselves by signing in through Google. \n-\n"
-        			+ "At your own risk, you may choose to remain anonymous using a random name. \n-\n"
-        			+ "This is permanent.\n");
+			final Image logo = Utils.loadImage("/yakhere.png");
+			final Container logoContainer = new Container(new BoxLayout(BoxLayout.Y_AXIS));
+			final Label logoLabel = new Label(logo.scaled(48, 48));
+			final Style logoContainerStyle = new Style();
+			logoContainerStyle.setBgColor(0);
+			logoContainerStyle.setBackgroundType(Style.BACKGROUND_NONE, true);
+			logoContainerStyle.setAlignment(Component.CENTER);
+			logoContainerStyle.setMargin(Component.TOP, 50);
+			logoLabel.setUnselectedStyle(logoContainerStyle);
+			logoContainer.setUnselectedStyle(logoContainerStyle);
+			logoContainer.setFocusable(false);
+			
+			signInPanel.addComponent(logoLabel);
+
         	signInInstructions.setUnselectedStyle(signInInstructionsStyle);
         	signInInstructions.setSelectedStyle(signInInstructionsStyle);
         	signInInstructions.setEditable(false);
         	
-        	final Button signInGoogle = new Button(Utils.loadImage("/google.png").scaled(64, 64));
-        	signInGoogle.setHeight(128);
-        	signInGoogle.setPreferredW(mainForm.getPreferredW()/2);
-        	final Button signInYakhere = new Button(Utils.loadImage("/yakhere.png"));
-        	signInYakhere.setHeight(128);
-        	signInYakhere.setPreferredW(mainForm.getPreferredW()/2);
+        	final Button signInButton = new Button("sign up");
+        	signInButton.setHeight(128);
+        	signInButton.setPreferredW(mainForm.getPreferredW()/2);
+        	final Button signUpButton = new Button("sign in");
+        	signUpButton.setHeight(128);
+        	signUpButton.setPreferredW(mainForm.getPreferredW()/2);
 
-        	final Container signInButtonPanel = new Container(new BoxLayout(BoxLayout.X_AXIS));
+        	final Container signInButtonPanel = new Container(new BoxLayout(BoxLayout.Y_AXIS));
         	
         	signInPanel.addComponent(signInInstructions);
-        	signInButtonPanel.addComponent(signInGoogle);
-        	signInButtonPanel.addComponent(signInYakhere);
+        	signInButtonPanel.addComponent(signInButton);
+        	signInButtonPanel.addComponent(signUpButton);
         	signInPanel.addComponent(signInButtonPanel);
         	signInButtonPanel.setPreferredH(mainForm.getPreferredH() - mainForm.getTitleComponent().getPreferredH());
 
-        	signInGoogle.addActionListener(new ActionListener() {
+        	signInButton.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent evt) {
 					mainForm.removeComponent(signInPanel);
 					signInPanel.setVisible(false);
 					String yakhereName;
-					try {
-						yakhereName = new Authenticator(mainForm).authGoogle();
-						signInPanel.removeAll();
-					} catch (InterruptedException e) {
-						signInPanel.setVisible(true);
-						mainForm.addComponent(0, signInPanel);
-						return;
-					}
+
+//						yakhereName = new Authenticator(mainForm).authGoogle();
+					yakhereName = new Authenticator(mainForm, signInPanel).signUp();
+//						signInPanel.removeAll();
+
 		    		name.setText(yakhereName);
 		        	Storage.getInstance().writeObject("yakhere-name", yakhereName);
 				}
 			});
         	
-        	signInYakhere.addActionListener(new ActionListener() {
+        	signUpButton.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent evt) {
 					mainForm.removeComponent(signInPanel);
 					signInPanel.setVisible(false);
-					signInPanel.removeAll();
-					final String yakhereName = Utils.generateName();
+					String yakhereName;
+					yakhereName = new Authenticator(mainForm, signInPanel).signIn();
+//						signInPanel.removeAll();
+
 		    		name.setText(yakhereName);
 		        	Storage.getInstance().writeObject("yakhere-name", yakhereName);
 				}
 			});
+        	
+    		final Style disclaimerLabelStyle = new Style();
+            Font disclaimerLabelStyleFont = Font.createTrueTypeFont("Raleway Medium", "Raleway-Medium.ttf");
+            disclaimerLabelStyleFont = signInInstructionsStyleFont.derive(14, Font.STYLE_PLAIN);
+            disclaimerLabelStyle.setFont(disclaimerLabelStyleFont);
+            disclaimerLabelStyle.setFgColor(-1);
+            disclaimerLabelStyle.setBgColor(0);
+            disclaimerLabelStyle.setBgTransparency(235);
+            disclaimerLabelStyle.setAlignment(Component.CENTER);
+        	
+        	final TextArea disclaimerLabel = new TextArea("YakHere v0.9.9 - Copyright © 2015 YakHere. All rights reserved.");
+        	disclaimerLabel.setUnselectedStyle(disclaimerLabelStyle);
+        	disclaimerLabel.setSelectedStyle(disclaimerLabelStyle);
+        	disclaimerLabel.setEditable(false);
+            
+        	signInPanel.addComponent(disclaimerLabel);
         	
         	mainForm.addComponent(0, signInPanel);
         }
